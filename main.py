@@ -12,6 +12,7 @@ References:
 """
 import os.path
 from PyPDF2 import PdfFileReader, utils
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
@@ -93,8 +94,11 @@ def descargar():
 
     with click.progressbar(urls) as bar:
         for url in bar:
-            filename = url.split("/")[-1]
+            parsed = urlparse(url)
+            filename = '/'.join(parsed.path.split('/')[-3:])
             file_path = os.path.join(_PDF_PATH, filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
             req = Request(url)
             try:
                 pdf_file = urlopen(req)
