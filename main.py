@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Created on Tue Feb  2 18:01:54 2016
 
@@ -82,12 +84,15 @@ def descargar():
     if not os.path.isfile(_TXT_BOLETINES_PATH):
         click.echo("No existe el archivo: {0}".format(_TXT_BOLETINES_PATH))
         click.echo("Ejecute el metodo scrapear_url_boletines para obtener las url.")
-    else:
-        click.echo("Comenzando la descarga de Boletines")
-        with open(_TXT_BOLETINES_PATH, 'r') as url_boletines:
-            urls = url_boletines.read().splitlines()
-        bar = progressbar.ProgressBar()
-        for url in bar(urls):
+        return
+
+    click.echo("Comenzando la descarga de Boletines")
+    urls = []
+    with open(_TXT_BOLETINES_PATH, 'r') as url_boletines:
+        urls = url_boletines.read().splitlines()
+
+    with click.progressbar(urls) as bar:
+        for url in bar:
             filename = url.split("/")[-1]
             file_path = os.path.join(_PDF_PATH, filename)
             req = Request(url)
