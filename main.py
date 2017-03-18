@@ -20,11 +20,13 @@ import csv
 import os
 import re
 import click
+import subprocess
 os.environ['CLASSPATH'] = "./lib/tika-app-1.11.jar"
 #from jnius import autoclass
 
 _DATA_PATH = os.path.join(os.path.realpath(os.path.dirname(__file__)), "data")
 _PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
+_TXT_PATH = os.path.join(_DATA_PATH, "txts")
 _TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
 
 
@@ -138,6 +140,31 @@ def pdf_to_csv():
                 else:
                     #TODO: Check if text is not empty
                     data_writer.writerow([fn, text.encode("utf-8")])
+
+@cli.command()
+def pdf_to_txt():
+    """
+    Iterates throught all the pdf stored in ./data/pdf/ folder and export its
+    content to a txt file.
+    It uses the pdftotxt command from linux.
+    """
+    os.makedirs(_TXT_PATH, exist_ok=True)
+    bar = progressbar.ProgressBar()
+    for fn in bar(os.listdir(_PDF_PATH)):
+        file_path = os.path.join(_PDF_PATH, fn)
+        if file_path.endswith(".pdf"):
+            try:            
+                txt_name = fn[:-3] + "txt"
+                txt_path = os.path.join(_TXT_PATH, txt_name)
+                subprocess.run(["pdftotext",file_path, txt_path])                
+            except utils.PdfReadError as e:
+                click.echo("Error al leer el PDF: {0}".format(fn))
+            except Exception as e:
+                click.echo("Error desconocido en el PDF: {0}".format(fn))
+                click.echo("Error: {0}".format(e))
+        else:
+            #TODO: Check if text is not empty
+            print(fn + " no es un archivo PDF.")
 
 
 @cli.command()
