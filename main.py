@@ -17,6 +17,7 @@ import progressbar
 import csv
 import os
 import re
+import click
 os.environ['CLASSPATH'] = "./lib/tika-app-1.11.jar"
 #from jnius import autoclass
 
@@ -24,6 +25,13 @@ _DATA_PATH = os.path.join(os.path.realpath(os.path.dirname(__file__)), "data")
 _PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
 _TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
 
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
 def scrapear_url_boletines():
     """
     Scrapea iterativamente todos los links a los pdfs de los boletines de
@@ -37,6 +45,7 @@ def scrapear_url_boletines():
         son solo boletines oficiales. Pero la logica no hace chequeo alguno de
         que realmente sean. Si hay otros archivos en pdf, tambien los descarga.
     """
+    click.echo('test')
     pdf_links = []
     for year in range(2007, 2018):
         print("Scrapeando links del {0}".format(year))
@@ -62,6 +71,7 @@ def scrapear_url_boletines():
     print("Escritura finalizada.")
 
 
+@cli.command()
 def descargar_boletines():
     """
     Descarga iterativamente todos los pdf de la pagina:
@@ -96,6 +106,7 @@ def descargar_boletines():
     print("Descarga Finalizada")
 
 
+@cli.command()
 def pdf_to_csv():
     """
     Iterates throught all the pdf stored in ./data/pdf/ folder and export its
@@ -126,6 +137,7 @@ def pdf_to_csv():
                     data_writer.writerow([fn,text])
 
 
+@cli.command()
 def pdf_to_csv_with_PyPDF():
     """
     Iterates throught all the pdf stored in ./data/pdf/ folder and export its
@@ -155,6 +167,7 @@ def pdf_to_csv_with_PyPDF():
                     data_writer.writerow([fn, text.encode("utf-8")])
 
 
+@cli.command()
 def limpiar_texto(text):
     """
     Funcion para limpiar los execivos end of lines que vienen tras la extraccion
@@ -170,8 +183,4 @@ def limpiar_texto(text):
     return new_text
 
 if __name__ == "__main__":
-    scrapear_url_boletines()
-    descargar_boletines()
-    #pdf_to_csv()
-    pdf_to_csv_with_PyPDF()
-    
+    cli()
