@@ -16,22 +16,54 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
+import mimetypes
 import progressbar
 import csv
 import os
 import re
 import click
-os.environ['CLASSPATH'] = "./lib/tika-app-1.11.jar"
-#from jnius import autoclass
+import boto3
+
 
 _DATA_PATH = os.path.join(os.path.realpath(os.path.dirname(__file__)), "data")
 _PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
 _TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
+_BUCKET_NAME = 'boletin-cba'
 
 
 @click.group()
 def cli():
     pass
+
+
+def walk_dir(base_dir):
+    for root, _, files in os.walk(base_dir):
+        rel_dir = os.path.relpath(root, base_dir)
+        for file in files:
+            yield os.path.join(rel_dir, file)
+
+
+@cli.command()
+def deploy():
+    """Enviar el contenido del la carpeta data a s3"""
+    client = boto3.client('s3')
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(_BUCKET_NAME)
+
+    for file_path in walk_dir(_DATA_PATH):
+        key = file_path.replace('./', '')
+        try:
+            client.head_object(Bucket=_BUCKET_NAME, Key=key)
+            click.echo(key + ' found, skiping...')
+        except Exception as e:
+            click.echo('Subiendo ' + file_path)
+            mime, _ = mimetypes.guess_type(file_path)
+            bucket.upload_file(
+                os.path.join(_DATA_PATH, file_path),
+                key,
+                ExtraArgs={'ACL': 'public-read',
+                'ContentType': mime}
+            )
 
 
 @cli.command()
@@ -58,10 +90,8 @@ def scrapear():
                 response = urlopen(req)
             except HTTPError as e:
                 click.echo('Error en la url: {0}'.format(url))
-                click.echo(e.code, " - ", e.reason)
             except URLError as e:
                 click.echo('Error en la url: {0}'.format(url))
-                click.echo(e.code, " - ", e.reason)
             else:
                 html = response.read()
                 links = re.findall('"(http:\/\/.*?)"', str(html))
@@ -98,6 +128,10 @@ def descargar():
             filename = '/'.join(parsed.path.split('/')[-3:])
             file_path = os.path.join(_PDF_PATH, filename)
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            if os.path.isfile(file_path):
+                click.echo('Salteando\n' + file_path)
+                continue
 
             req = Request(url)
             try:
