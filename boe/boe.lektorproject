@@ -1,0 +1,5 @@
+[project]
+name = boe
+
+[servers.ghpages]
+target = ghpages://OpenDataCordoba/boletin-cba
