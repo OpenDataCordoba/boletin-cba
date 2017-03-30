@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
+import subprocess
 import mimetypes
 import progressbar
 import csv
@@ -26,8 +27,9 @@ import boto3
 
 
 _DATA_PATH = os.path.join(os.path.realpath(os.path.dirname(__file__)), "data")
-_PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
 _TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
+_PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
+_TXT_PATH = os.path.join(_DATA_PATH, "txts")
 _BUCKET_NAME = 'boletin-cba'
 
 
@@ -149,33 +151,28 @@ def descargar():
 
 
 @cli.command()
-def pdf_to_csv():
+def pdf_to_txt():
     """
     Iterates throught all the pdf stored in ./data/pdf/ folder and export its
-    content to the file data.csv.
-    The format of the csv file should have two columns: id and text
+    content to a txt file.
+    It uses the pdftotxt command from linux.
     """
-    bar = progressbar.ProgressBar()
-    csv_data_file = os.path.join(_DATA_PATH, "data.csv")
-    with open(csv_data_file, "w", newline='') as csvfile:
-        data_writer = csv.writer(csvfile)
-        data_writer.writerow(["document_id","document_text"])
-        for fn in bar(os.listdir(_PDF_PATH)):
-            file_path = os.path.join(_PDF_PATH, fn)
-            if file_path.endswith(".pdf"):
-                try:
-                    input_file = PdfFileReader(open(file_path, 'rb'))
-                    text = ""
-                    for p in range(input_file.getNumPages()):
-                        text += input_file.getPage(p).extractText() + " "
-                except utils.PdfReadError as e:
-                    click.echo("Error al leer el PDF: {0}".format(fn))
-                except Exception as e:
-                    click.echo("Error desconocido en el PDF: {0}".format(fn))
-                    click.echo("Error: {0}".format(e))
-                else:
-                    #TODO: Check if text is not empty
-                    data_writer.writerow([fn, text.encode("utf-8")])
+    os.makedirs(_TXT_PATH, exist_ok=True)
+    for fn in walk_dir(_PDF_PATH):
+        file_path = os.path.join(_PDF_PATH, fn)
+
+        if not file_path.endswith(".pdf"):
+            continue
+        try:
+            txt_name = fn.replace('.pdf', '.txt')
+            txt_path = os.path.join(_TXT_PATH, txt_name)
+            print(file_path)
+            subprocess.run(["pdftotext", "--raw", file_path, txt_path])
+        except utils.PdfReadError as e:
+            click.echo("Error al leer el PDF: {0}".format(fn))
+        except Exception as e:
+            click.echo("Error desconocido en el PDF: {0}".format(fn))
+            click.echo("Error: {0}".format(e))
 
 
 @cli.command()
