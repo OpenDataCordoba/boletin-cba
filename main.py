@@ -12,60 +12,27 @@ References:
 """
 import os.path
 from PyPDF2 import PdfFileReader, utils
-from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import re
-import subprocess
-import mimetypes
 import progressbar
 import csv
 import os
 import re
 import click
-import boto3
-
+import subprocess
+os.environ['CLASSPATH'] = "./lib/tika-app-1.11.jar"
+#from jnius import autoclass
 
 _DATA_PATH = os.path.join(os.path.realpath(os.path.dirname(__file__)), "data")
-_TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
 _PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
 _TXT_PATH = os.path.join(_DATA_PATH, "txts")
-_BUCKET_NAME = 'boletin-cba'
+_TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
 
 
 @click.group()
 def cli():
     pass
-
-
-def walk_dir(base_dir):
-    for root, _, files in os.walk(base_dir):
-        rel_dir = os.path.relpath(root, base_dir)
-        for file in files:
-            yield os.path.join(rel_dir, file)
-
-
-@cli.command()
-def deploy():
-    """Enviar el contenido del la carpeta data a s3"""
-    client = boto3.client('s3')
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(_BUCKET_NAME)
-
-    for file_path in walk_dir(_DATA_PATH):
-        key = file_path.replace('./', '')
-        try:
-            client.head_object(Bucket=_BUCKET_NAME, Key=key)
-            click.echo(key + ' found, skiping...')
-        except Exception as e:
-            click.echo('Subiendo ' + file_path)
-            mime, _ = mimetypes.guess_type(file_path)
-            bucket.upload_file(
-                os.path.join(_DATA_PATH, file_path),
-                key,
-                ExtraArgs={'ACL': 'public-read',
-                'ContentType': mime}
-            )
 
 
 @cli.command()
@@ -92,8 +59,10 @@ def scrapear():
                 response = urlopen(req)
             except HTTPError as e:
                 click.echo('Error en la url: {0}'.format(url))
+                click.echo(e.code, " - ", e.reason)
             except URLError as e:
                 click.echo('Error en la url: {0}'.format(url))
+                click.echo(e.code, " - ", e.reason)
             else:
                 html = response.read()
                 links = re.findall('"(http:\/\/.*?)"', str(html))
@@ -126,15 +95,8 @@ def descargar():
 
     with click.progressbar(urls) as bar:
         for url in bar:
-            parsed = urlparse(url)
-            filename = '/'.join(parsed.path.split('/')[-3:])
+            filename = url.split("/")[-1]
             file_path = os.path.join(_PDF_PATH, filename)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-            if os.path.isfile(file_path):
-                click.echo('Salteando\n' + file_path)
-                continue
-
             req = Request(url)
             try:
                 pdf_file = urlopen(req)
@@ -151,6 +113,35 @@ def descargar():
 
 
 @cli.command()
+def pdf_to_csv():
+    """
+    Iterates throught all the pdf stored in ./data/pdf/ folder and export its
+    content to the file data.csv.
+    The format of the csv file should have two columns: id and text
+    """
+    bar = progressbar.ProgressBar()
+    csv_data_file = os.path.join(_DATA_PATH, "data.csv")
+    with open(csv_data_file, "w", newline='') as csvfile:
+        data_writer = csv.writer(csvfile)
+        data_writer.writerow(["document_id","document_text"])
+        for fn in bar(os.listdir(_PDF_PATH)):
+            file_path = os.path.join(_PDF_PATH, fn)
+            if file_path.endswith(".pdf"):
+                try:
+                    input_file = PdfFileReader(open(file_path, 'rb'))
+                    text = ""
+                    for p in range(input_file.getNumPages()):
+                        text += input_file.getPage(p).extractText() + " "
+                except utils.PdfReadError as e:
+                    click.echo("Error al leer el PDF: {0}".format(fn))
+                except Exception as e:
+                    click.echo("Error desconocido en el PDF: {0}".format(fn))
+                    click.echo("Error: {0}".format(e))
+                else:
+                    #TODO: Check if text is not empty
+                    data_writer.writerow([fn, text.encode("utf-8")])
+
+@cli.command()
 def pdf_to_txt():
     """
     Iterates throught all the pdf stored in ./data/pdf/ folder and export its
@@ -158,21 +149,22 @@ def pdf_to_txt():
     It uses the pdftotxt command from linux.
     """
     os.makedirs(_TXT_PATH, exist_ok=True)
-    for fn in walk_dir(_PDF_PATH):
+    bar = progressbar.ProgressBar()
+    for fn in bar(os.listdir(_PDF_PATH)):
         file_path = os.path.join(_PDF_PATH, fn)
-
-        if not file_path.endswith(".pdf"):
-            continue
-        try:
-            txt_name = fn.replace('.pdf', '.txt')
-            txt_path = os.path.join(_TXT_PATH, txt_name)
-            print(file_path)
-            subprocess.run(["pdftotext", "--raw", file_path, txt_path])
-        except utils.PdfReadError as e:
-            click.echo("Error al leer el PDF: {0}".format(fn))
-        except Exception as e:
-            click.echo("Error desconocido en el PDF: {0}".format(fn))
-            click.echo("Error: {0}".format(e))
+        if file_path.endswith(".pdf"):
+            try:            
+                txt_name = fn[:-3] + "txt"
+                txt_path = os.path.join(_TXT_PATH, txt_name)
+                subprocess.run(["pdftotext",file_path, txt_path])                
+            except utils.PdfReadError as e:
+                click.echo("Error al leer el PDF: {0}".format(fn))
+            except Exception as e:
+                click.echo("Error desconocido en el PDF: {0}".format(fn))
+                click.echo("Error: {0}".format(e))
+        else:
+            #TODO: Check if text is not empty
+            print(fn + " no es un archivo PDF.")
 
 
 @cli.command()
