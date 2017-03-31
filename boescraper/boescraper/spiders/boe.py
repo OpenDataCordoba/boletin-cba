@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import dateparser
 
 
 class BoeSpider(scrapy.Spider):
@@ -8,17 +9,19 @@ class BoeSpider(scrapy.Spider):
     start_urls = ['http://boletinoficial.cba.gov.ar/']
 
     def parse(self, response):
-        page = response.url.split("/")[-2]
-        pdf_links = response.xpath('//*[@id="container_portada"]/div/ul/li/a/@href').extract()
-        # self.log(pdf_links)
-        for i, p in enumerate(pdf_links):
-            pass
-            # yield {'name': 'test', 'i': i, 'file_urls': [p]}
-        self.log(response.url)
+        for grupo in response.xpath('//*[@id="container_portada"]/div/ul'):
+            fecha = grupo.xpath('preceding-sibling::div/text()').extract_first()
+            date = dateparser.parse(fecha, languages=['es'])
+            for seccion in grupo.xpath('li/a'):
+                link = seccion.xpath('@href').extract_first()
+                yield {
+                    'fecha': fecha,
+                    'date': date.strftime('%Y-%m-%d'),
+                    'titulo': seccion.xpath('h2/text()').extract_first(),
+                    'link': link,
+                    'file_urls': [link]
+                }
+
         other_pages = response.xpath('//*[@id="archives_calendar-2"]/div/div/div/div/a/@href').extract()
         for next_page in other_pages:
             yield scrapy.Request(next_page, callback=self.parse)
-        # filename = 'quotes-%s.html' % page
-        # with open(filename, 'wb') as f:
-        #     f.write(response.body)
-        # self.log('Saved file %s' % filename)
