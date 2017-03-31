@@ -10,7 +10,7 @@ class BoeSpider(scrapy.Spider):
 
     def parse(self, response):
         for grupo in response.xpath('//*[@id="container_portada"]/div/ul'):
-            fecha = grupo.xpath('preceding-sibling::div/text()').extract_first()
+            fecha = grupo.xpath('preceding::div[1]/text()').extract_first()
             date = dateparser.parse(fecha, languages=['es'])
             for seccion in grupo.xpath('li/a'):
                 link = seccion.xpath('@href').extract_first()

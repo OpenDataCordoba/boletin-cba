@@ -10,6 +10,8 @@ References:
  - PyPDF2: https://github.com/mstamy2/PyPDF2
  - Tika: http://www.hackzine.org/using-apache-tika-from-python-with-jnius.html
 """
+import json
+from shutil import copyfile
 import os.path
 from PyPDF2 import PdfFileReader, utils
 from urllib.request import Request, urlopen
@@ -181,6 +183,54 @@ def limpiar_texto(text):
         else:
             new_text += '\n'
     return new_text
+
+
+@cli.command()
+def generar_content():
+    """
+    {'link': 'http://boletinoficial.cba.gov.ar/wp-content/4p96humuzp/2012/03/120312_citacionesanexo.pdf',
+     'file_urls': ['http://boletinoficial.cba.gov.ar/wp-content/4p96humuzp/2012/03/120312_citacionesanexo.pdf'],
+     'fecha': 'Viernes, 30 de marzo de 2012',
+     'files': [],
+     'titulo': '2º Sección: Judiciales - Anexo Citaciones',
+     'date': '2012-03-30'}
+    """
+    CONTENT_BASE = 'boe/content/boletin'
+    FILE_BASE = 'boescraper/tmp'
+    boletines = open('boescraper/boletines.jl')
+
+    for line in boletines:
+        boletin = json.loads(line)
+        date = boletin['date']
+        try:
+            first_file = boletin['files'][0]
+        except IndexError:
+            click.echo('fuck, sin archivo para %s' % boletin['date'])
+            print(boletin)
+            continue
+        filepath = os.path.join(FILE_BASE, first_file['path'])
+        _, filename = os.path.split(filepath)
+        boletin_dir = os.path.join(CONTENT_BASE, date)
+        os.makedirs(boletin_dir, exist_ok=True)
+
+        destination_pdf = os.path.join(boletin_dir, filename)
+        print(destination_pdf)
+        copyfile(filepath, destination_pdf)
+        destination_txt = destination_pdf[:-4] + '.txt'
+        subprocess.run(["pdftotext", destination_pdf, destination_txt])
+        body = open(destination_txt).read()
+        print(body)
+        content_body = '\n'.join(["title: %s" % boletin['titulo'],
+        "---",
+        "pub_date: %s" % boletin['date'],
+        "---",
+        "body:"
+        "\n",
+        body])
+        with open(os.path.join(boletin_dir,'content.lr'), 'w') as content:
+            content.write(content_body)
+
+
 
 
 if __name__ == "__main__":
