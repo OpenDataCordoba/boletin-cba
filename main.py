@@ -227,7 +227,7 @@ def generar_content():
         "body:"
         "\n",
         body])
-        with open(os.path.join(boletin_dir,'content.lr'), 'w') as content:
+        with open(os.path.join(boletin_dir,'contents.lr'), 'w') as content:
             content.write(content_body)
 
 
