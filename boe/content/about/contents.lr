@@ -1,7 +1,10 @@
-title: About this Website
+title: Sobre este proyecto
 ---
 body:
 
-This is a website that was made with the Lektor quickstart.
+Este sitio utiliza los datos publicados en http://boletinoficial.cba.gov.ar .
 
-And it does not contain a lot of information.
+El objetivo de este ejercicio es hacer accesibles las publicaciones del boletín desde
+la web, sin necesidad de usar archivos PDF.
+
+Todas las secciones cuentan con links a las fuentes debajo.

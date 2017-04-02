@@ -1,5 +1,9 @@
-title: Bienvenidos al Boletín Oficial Electrónico No Oficial
+title:
 ---
 body:
 
-Una versión HTML del boletín oficial de Córdoba sin usar PDF.
+<div class="jumbotron">
+  <h1>Bienvenidos!</h1>
+  <p>Una versión del boletín oficial de Córdoba libre de PDF.</p>
+  <p><a class="btn btn-primary btn-lg" href="/boletin" role="button">Boletines</a></p>
+</div>
