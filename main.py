@@ -12,6 +12,7 @@ References:
 """
 import json
 from shutil import copyfile
+from slugify import slugify
 import os.path
 from PyPDF2 import PdfFileReader, utils
 from urllib.request import Request, urlopen
@@ -195,6 +196,7 @@ def generar_content():
      'titulo': '2º Sección: Judiciales - Anexo Citaciones',
      'date': '2012-03-30'}
     """
+    dry_run = False
     CONTENT_BASE = 'boe/content/boletin'
     FILE_BASE = 'boescraper/tmp'
     boletines = open('boescraper/boletines.jl')
@@ -202,6 +204,8 @@ def generar_content():
     for line in boletines:
         boletin = json.loads(line)
         date = boletin['date']
+        fecha = boletin['fecha']
+        titulo = slugify(boletin['titulo'])
         try:
             first_file = boletin['files'][0]
         except IndexError:
@@ -210,16 +214,21 @@ def generar_content():
             continue
         filepath = os.path.join(FILE_BASE, first_file['path'])
         _, filename = os.path.split(filepath)
-        boletin_dir = os.path.join(CONTENT_BASE, date)
-        os.makedirs(boletin_dir, exist_ok=True)
+        date_dir = os.path.join(CONTENT_BASE, date)
+        seccion_dir = os.path.join(CONTENT_BASE, date, titulo)
+        os.makedirs(seccion_dir, exist_ok=True)
+        # print(boletin)
 
-        destination_pdf = os.path.join(boletin_dir, filename)
-        print(destination_pdf)
+        destination_pdf = os.path.join(seccion_dir, filename)
+
+        if dry_run:
+            continue
+
         copyfile(filepath, destination_pdf)
         destination_txt = destination_pdf[:-4] + '.txt'
-        subprocess.run(["pdftotext", destination_pdf, destination_txt])
+        subprocess.call(["pdftotext", destination_pdf, destination_txt])
         body = open(destination_txt).read()
-        print(body)
+
         content_body = '\n'.join(["title: %s" % boletin['titulo'],
         "---",
         "pub_date: %s" % boletin['date'],
@@ -227,7 +236,12 @@ def generar_content():
         "body:"
         "\n",
         body])
-        with open(os.path.join(boletin_dir,'contents.lr'), 'w') as content:
+        with open(os.path.join(date_dir, 'contents.lr'), 'w') as date_contents:
+            date_contents.write('\n'.join(["title: %s" % fecha,
+                "---",
+                "pub_date: %s" % boletin['date'],
+                "---"]))
+        with open(os.path.join(seccion_dir, 'contents.lr'), 'w') as content:
             content.write(content_body)
 
 
