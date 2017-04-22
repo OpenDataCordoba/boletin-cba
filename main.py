@@ -229,18 +229,21 @@ def generar_content():
         subprocess.call(["pdftotext", destination_pdf, destination_txt])
         body = open(destination_txt).read()
 
-        content_body = '\n'.join(["title: %s" % boletin['titulo'],
-        "---",
-        "pub_date: %s" % boletin['date'],
-        "---",
-        "body:"
-        "\n",
-        body])
         with open(os.path.join(date_dir, 'contents.lr'), 'w') as date_contents:
             date_contents.write('\n'.join(["title: %s" % fecha,
                 "---",
                 "pub_date: %s" % boletin['date'],
                 "---"]))
+
+        content_body = '\n'.join(["title: %s" % boletin['titulo'],
+        "---",
+        "pub_date: %s" % date,
+        "---",
+        "fecha: %s" % fecha,
+        "---",
+        "body:"
+        "\n",
+        body])
         with open(os.path.join(seccion_dir, 'contents.lr'), 'w') as content:
             content.write(content_body)
 
