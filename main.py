@@ -246,8 +246,6 @@ def generar_content():
     boletines = open('boescraper/boletines.jl')
 
     for i, line in enumerate(boletines):
-        print(i)
-
         boletin = json.loads(line)
 
         date_str = boletin['date']
@@ -271,6 +269,25 @@ def generar_content():
             ("day", str(day)),
         ])
         render_boletin(seccion_dir, boletin)
+
+
+@cli.command()
+def generar_content_de_pdfs():
+    """
+        extraer texto de pdfs ya descargados
+    """
+    dry_run = False
+    PDFS_BASE = 'data/pdfs'
+    TXTS_BASE = 'data/txts'
+
+    for pdf_fname in os.listdir(PDFS_BASE):
+        source_pdf = os.path.join(PDFS_BASE, pdf_fname)
+        destination_txt = os.path.join(TXTS_BASE, pdf_fname[:-4] + '.txt')
+
+        if dry_run:
+            continue
+
+        subprocess.call(["pdftotext", "-raw", source_pdf, destination_txt])
 
 
 if __name__ == "__main__":
