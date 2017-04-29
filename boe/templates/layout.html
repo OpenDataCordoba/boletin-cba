@@ -33,7 +33,7 @@
             <li{% if this._path == '/' %} class="active"{% endif
               %}><a href="{{ '/'|url }}">Home</a></li>
             {% for href, title in [
-              ['/boletin', 'Boletines'],
+              ['/boletin', 'Años'],
               ['/about', 'Acerca de']
             ] %}
               <li{% if this.is_child_of(href) %} class="active"{% endif
