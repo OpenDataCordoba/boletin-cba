@@ -1,18 +1,16 @@
 {% extends "layout.html" %}
 {% from "macros/blog.html" import render_blog_post %}
 {% from "macros/pagination.html" import render_pagination %}
-
 {% block title %}{{ this.title }}{% endblock %}
 {% block body %}
-  {% for post in this.children %}
-  	<h2>Años</h2>
+  <h2>Días</h2>
+  {% for post in this.pagination.items %}
   	  <div class="blog-post">
-	    <h2><a href="{{ post|url }}">{{ post.year }}</a></h2>
-	  <p class="meta">
-	  </p>
+	    <h2><a href="{{ post|url }}">{{ post.year }}-{{ post.month}}-{{ post.day}}</a></h2>
+	  <p class="meta"></p>
 	  {# {{ post.body }} #}
 	  </div>
   {% endfor %}
 
-
+  {{ render_pagination(this.pagination) }}
 {% endblock %}
