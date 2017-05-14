@@ -13,13 +13,13 @@ class BoeSpider(scrapy.Spider):
             fecha = grupo.xpath('preceding::div[1]/text()').extract_first()
             date = dateparser.parse(fecha, languages=['es'])
             for seccion in grupo.xpath('li/a'):
-                link = seccion.xpath('@href').extract_first()
+                url = seccion.xpath('@href').extract_first()
                 yield {
                     'fecha': fecha,
                     'date': date.strftime('%Y-%m-%d'),
-                    'titulo': seccion.xpath('h2/text()').extract_first(),
-                    'link': link,
-                    'file_urls': [link]
+                    'titulo': seccion.xpath('h2/text()').extract_first().strip(),
+                    'url': url,
+                    'file_urls': [url]
                 }
 
         other_pages = response.xpath('//*[@id="archives_calendar-2"]/div/div/div/div/a/@href').extract()

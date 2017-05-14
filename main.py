@@ -217,6 +217,7 @@ def render_boletin(destination, boletin):
     # destination_pdf = os.path.join(destination, filename)
     # copyfile(file_path, destination_pdf)
 
+    # refactor to pdf2text
     proc = subprocess.Popen(["pdftotext", '-raw', file_path, '-'], stdout=subprocess.PIPE,
         bufsize=1, universal_newlines=True)
     body = ''.join([line for line in proc.stdout])
@@ -228,6 +229,12 @@ def render_boletin(destination, boletin):
         ("filename", filename),
         ("body", "\n\n" + body)
     ])
+
+
+def pdf2text(file_path):
+    proc = subprocess.Popen(["pdftotext", '-raw', file_path, '-'], stdout=subprocess.PIPE,
+        bufsize=1, universal_newlines=True)
+    return ''.join([line for line in proc.stdout])
 
 
 from datetime import datetime
@@ -288,6 +295,33 @@ def generar_content_de_pdfs():
             continue
 
         subprocess.call(["pdftotext", "-raw", source_pdf, destination_txt])
+
+
+from boescraper.boescraper.database.connection import Base, engine, db
+from boescraper.boescraper.database.models import SeccionBoletin
+
+
+@cli.command()
+def init_db():
+    Base.metadata.bind = engine
+    Base.metadata.create_all()
+
+
+@cli.command()
+def drop_db():
+    Base.metadata.bind = engine
+    Base.metadata.drop_all()
+
+
+@cli.command()
+def update_text():
+    for i, seccion in enumerate(db.query(SeccionBoletin)):
+        file_path = os.path.join(FILE_BASE, seccion.file_path)
+        print(file_path)
+        if i % 20:
+            db.commit()
+        seccion.content = pdf2text(file_path)
+    db.commit()
 
 
 if __name__ == "__main__":
