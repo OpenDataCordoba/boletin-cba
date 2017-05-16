@@ -2,18 +2,14 @@
 
 Scrapper para descargar todos los boletines oficiales de la página del [Gobierno de la Provincia de Córdoba](http://boletinoficial.cba.gov.ar).
 
-Requiere:
-* progressbar2
-* PyPDF2
-* jnius para usar Tika
-
-Para utilizar Tika como extractor de texto del PDF ver el siguiente link (requiere la descarga de libreria):
-* [http://www.hackzine.org/using-apache-tika-from-python-with-jnius.html](http://www.hackzine.org/using-apache-tika-from-python-with-jnius.html)
-
 
 # Scraper
+Crear una base de datos llamada `boletin`. Iniciar schema con 
+```
+$ ./main.py init_db
+```
+y luego correr el scraper con
 
 ```
-$ cd boescraper
-$ scrapy crawl boe -o boletines.jl
+$ scrapy crawl boe
 ```

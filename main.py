@@ -187,7 +187,7 @@ def limpiar_texto(text):
 
 
 CONTENT_BASE = 'boe/content/boletin'
-FILE_BASE = 'boescraper/tmp'
+FILE_BASE = 'tmp'
 
 
 def render_lektor(items):
@@ -297,8 +297,8 @@ def generar_content_de_pdfs():
         subprocess.call(["pdftotext", "-raw", source_pdf, destination_txt])
 
 
-from boescraper.boescraper.database.connection import Base, engine, db
-from boescraper.boescraper.database.models import SeccionBoletin
+from boescraper.database.connection import Base, engine, db
+from boescraper.database.models import SeccionBoletin
 
 
 @cli.command()
@@ -322,6 +322,17 @@ def update_text():
             db.commit()
         seccion.content = pdf2text(file_path)
     db.commit()
+
+
+@cli.command()
+def render_site():
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    env = Environment(
+        loader=FileSystemLoader('./boe/templates'),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    layout = env.get_template('layout.html')
+    print(layout.render())
 
 
 if __name__ == "__main__":
