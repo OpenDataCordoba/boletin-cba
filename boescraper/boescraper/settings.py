@@ -64,10 +64,13 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'boescraper.pipelines.BoescraperPipeline': 300,
-#}
-ITEM_PIPELINES = {'scrapy.pipelines.files.FilesPipeline': 1}
+# ITEM_PIPELINES = {
+   # 'boescraper.pipelines.BoescraperPipeline': 300,
+# }
+ITEM_PIPELINES = {
+    'scrapy.pipelines.files.FilesPipeline': 1,
+    'boescraper.pipelines.BoescraperPipeline': 300,
+}
 FILES_STORE = './tmp/'
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
