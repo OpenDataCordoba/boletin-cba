@@ -1,6 +1,6 @@
 data/
 boe/content/
-boescraper/tmp/
+tmp/
 boescraper/boletines.jl
 __pycache__/
 boescraper/tmp/
