@@ -6,6 +6,7 @@ class SeccionBoletin(Base):
     __tablename__ = 'seccion_boletin'
 
     titulo = Column(String(1000), primary_key=True)
+    slug = Column(Text)
     date = Column(Date, primary_key=True)
     url = Column(Text)
     file_path = Column(Text)

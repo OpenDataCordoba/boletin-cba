@@ -8,6 +8,7 @@ import logging
 import subprocess
 import os
 import sqlalchemy.exc
+from slugify import slugify
 
 from .database.connection import db
 from .database.models import SeccionBoletin
@@ -35,6 +36,7 @@ class BoescraperPipeline(object):
 
         record = SeccionBoletin(
             titulo=item['titulo'],
+            slug=slugify(item['titulo']),
             date=item['date'],
             url=item['url'],
             file_path=file_path,

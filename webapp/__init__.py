@@ -1,18 +1,21 @@
-from datetime import datetime
+import mistune
+import datetime
 import sqlalchemy as sa
-from flask import Flask, render_template
+from flask import Flask, render_template, abort, Markup
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer, Date, Text
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///boletin'
 db = SQLAlchemy(app)
+markdown = mistune.Markdown()
 
 
 class SeccionBoletin(db.Model):
     __tablename__ = 'seccion_boletin'
 
     titulo = Column(String(1000), primary_key=True)
+    slug = Column(Text)
     date = Column(Date, primary_key=True)
     url = Column(Text)
     file_path = Column(Text)
@@ -46,8 +49,22 @@ def month(year, month):
 
 @app.route("/<int:year>/<int:month>/<int:day>/")
 def day(year, month, day):
-    secciones = db.session.query(SeccionBoletin).filter(SeccionBoletin.date == '2017-05-19')
+    date = datetime.date(year, month, day)
+    secciones = db.session.query(SeccionBoletin).filter(SeccionBoletin.date == date)
     return render_template('day.html', year=year, month=month, day=day, secciones=secciones)
+
+
+@app.route("/<int:year>/<int:month>/<int:day>/<slug>/")
+def seccion(year, month, day, slug):
+    date = datetime.date(year, month, day)
+    seccion = db.session.query(SeccionBoletin).filter(
+        SeccionBoletin.date == date,
+        SeccionBoletin.slug == slug
+    ).first()
+    if not seccion:
+        abort(404)
+    content = Markup(markdown(seccion.content))
+    return render_template('seccion.html', year=year, month=month, day=day, seccion=seccion, content=content)
 
 
 if __name__ == "__main__":
