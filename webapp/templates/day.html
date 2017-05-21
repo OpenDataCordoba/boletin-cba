@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+{{year}}-{{month}}-{{day}}
+
+	{% for item in secciones %}
+		<h1><a href="/{{year}}/{{month}}/{{item.day}}/">{{ item.titulo }}</a></h1>
+	{% endfor%}
+
+{% endblock%}

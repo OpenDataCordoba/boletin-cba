@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlalchemy as sa
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -21,17 +22,32 @@ class SeccionBoletin(db.Model):
         return "<SeccionBoletin: titulo='%s', date='%s'>" % (self.titulo, self.date)
 
 
+def query_date_part(part):
+    return db.session.query(sa.distinct(sa.cast(sa.func.extract(part, SeccionBoletin.date), sa.Integer)).label(part))
+
+
 @app.route("/")
 def home():
-    secciones = db.session.query(SeccionBoletin)
-    years = db.session.query(sa.distinct(sa.func.date_part('YEAR', SeccionBoletin.date))).all()
+    years = query_date_part('year')
     return render_template('home.html', years=years)
 
 
-@app.route("/<int:year>")
+@app.route("/<int:year>/")
 def year(year):
-    months = ['1','2']
+    months = query_date_part('month')
     return render_template('year.html', year=year, months=months)
+
+
+@app.route("/<int:year>/<int:month>/")
+def month(year, month):
+    days = query_date_part('day')
+    return render_template('month.html', year=year, month=month, days=days)
+
+
+@app.route("/<int:year>/<int:month>/<int:day>/")
+def day(year, month, day):
+    secciones = db.session.query(SeccionBoletin).filter(SeccionBoletin.date == '2017-05-19')
+    return render_template('day.html', year=year, month=month, day=day, secciones=secciones)
 
 
 if __name__ == "__main__":

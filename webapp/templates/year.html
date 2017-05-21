@@ -3,4 +3,9 @@
 {% block body %}
 {{year}}
 
+	{% for month in months %}
+		<h1><a href="/{{year}}/{{month[0]}}">{{month[0]}}</a></h1>
+	{% endfor%}
+
+
 {% endblock%}
