@@ -26,7 +26,9 @@ class SeccionBoletin(db.Model):
 
 
 def query_date_part(part):
-    return db.session.query(sa.distinct(sa.cast(sa.func.extract(part, SeccionBoletin.date), sa.Integer)).label(part))
+    query = db.session.query(sa.distinct(sa.cast(sa.func.extract(part, SeccionBoletin.date), sa.Integer)).label(part))
+    query = query.order_by(part)
+    return query
 
 
 @app.route("/")
