@@ -2,8 +2,8 @@
 
 {% block body %}
 
-	{% for year in years %}
-		<h1><a href="/{{year[0]}}">{{year[0]}}</a></h1>
+	{% for item in years %}
+		<h1><a href="{{url_for('year', year=item.year)}}">{{item.year}}</a></h1>
 	{% endfor%}
 
 {% endblock%}

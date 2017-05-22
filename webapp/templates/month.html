@@ -4,7 +4,7 @@
 {{year}} {{month}}
 
 	{% for item in days %}
-		<h1><a href="/{{year}}/{{month}}/{{item.day}}/">{{ item.day }}</a></h1>
+		<h1><a href="{{url_for('day', year=year, month=month, day=item.day)}}">{{ item.day }}</a></h1>
 	{% endfor%}
 
 {% endblock%}

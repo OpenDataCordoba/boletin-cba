@@ -1,4 +1,4 @@
-data/
+webapp/build/
 boe/content/
 tmp/
 boescraper/boletines.jl

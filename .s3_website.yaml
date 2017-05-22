@@ -1,0 +1,9 @@
+site: webapp/build
+s3_bucket: boletin-cba
+
+cache_rules:
+  - match: "/static/*"
+    maxage: 30 days
+
+  - match: "*"
+    maxage: 1 hour
