@@ -1,10 +1,21 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-{{year}}-{{month}}-{{day}}
 
+<div class="mw9 center ph3-ns tc">
+<h1 class="f2 lh-copy">Secciones del día {{year}}-{{month}}-{{day}}</h1>
+  <div class="cf ph2-ns">
 	{% for item in secciones %}
-		<h1><a href="{{url_for('seccion', year=year, month=month, day=day, slug=item.slug)}}">{{ item.titulo }}</a></h1>
+	    <div class="fl w-100 pa2">
+			<a class="f4 fw6 db gray link dim"
+				href="{{url_for('seccion', year=year, month=month, day=day, slug=item.slug)}}">
+		      	<div class="outline bg-white pv4">
+					{{ item.titulo }}
+		      	</div>
+			</a>
+	    </div>
 	{% endfor%}
+  </div>
+</div>
 
 {% endblock%}

@@ -1,8 +1,18 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-{{year}}-{{month}}-{{day}}
 
-<pre>{{seccion.content}}</pre>
+<div class="mw9 center ph3-ns">
+
+  	<div class="cf ph2-ns">
+    	<div class="fl w-100 pa2">
+		<h1 class="f2 lh-copy">Día: {{year}}-{{month}}-{{day}}</h1>
+		<h2 class="f3 lh-copy">Titulo: {{seccion.titulo}}</h2>
+			<pre>{{content}}</pre>
+    	</div>
+  	</div>
+</div>
+
+
 
 {% endblock%}

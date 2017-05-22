@@ -1,10 +1,22 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-{{year}}
 
+<div class="mw9 center ph3-ns tc">
+<h1 class="f2 lh-copy">Meses de {{year}}</h1>
+  <div class="cf ph2-ns">
 	{% for item in months %}
-		<h1><a href="{{url_for('month', year=year, month=item.month)}}">{{item.month}}</a></h1>
+	    <div class="fl w-100 w-25-ns pa2">
+			<a class="f4 fw6 db gray link dim"
+				href="{{url_for('month', year=year, month=item.month)}}">
+		      	<div class="outline bg-white pv4">
+					{{item.month}}
+		      	</div>
+			</a>
+	    </div>
 	{% endfor%}
+  </div>
+</div>
+
 
 {% endblock%}
