@@ -32,6 +32,8 @@ _PDF_PATH = os.path.join(_DATA_PATH, "pdfs")
 _TXT_PATH = os.path.join(_DATA_PATH, "txts")
 _TXT_BOLETINES_PATH = os.path.join(_DATA_PATH, "urls_boletin.txt")
 
+FILE_BASE = 'tmp'
+
 
 @click.group()
 def cli():
@@ -186,96 +188,10 @@ def limpiar_texto(text):
     return new_text
 
 
-CONTENT_BASE = 'boe/content/boletin'
-FILE_BASE = 'tmp'
-
-
-def render_lektor(items):
-    return '\n---\n'.join(map(lambda x: x[0] + ': ' + x[1], items))
-
-
-def render_content(destination, items):
-    with open(os.path.join(destination, 'contents.lr'), 'w') as contents:
-        contents.write(render_lektor(items))
-
-
-def render_boletin(destination, boletin):
-    try:
-        first_file = boletin['files'][0]
-    except IndexError:
-        click.echo('fuck, sin archivo para %s' % boletin['date'])
-        return
-
-    date = boletin['date']
-    fecha = boletin['fecha']
-    slug = slugify(boletin['titulo'])
-
-    file_path = os.path.join(FILE_BASE, first_file['path'])
-    _, filename = os.path.split(file_path)
-
-
-    # destination_pdf = os.path.join(destination, filename)
-    # copyfile(file_path, destination_pdf)
-
-    # refactor to pdf2text
-    proc = subprocess.Popen(["pdftotext", '-raw', file_path, '-'], stdout=subprocess.PIPE,
-        bufsize=1, universal_newlines=True)
-    body = ''.join([line for line in proc.stdout])
-
-    render_content(destination, [
-        ("title", boletin['titulo']),
-        ("pub_date", date),
-        ("fecha", fecha),
-        ("filename", filename),
-        ("body", "\n\n" + body)
-    ])
-
-
 def pdf2text(file_path):
     proc = subprocess.Popen(["pdftotext", '-raw', file_path, '-'], stdout=subprocess.PIPE,
         bufsize=1, universal_newlines=True)
     return ''.join([line for line in proc.stdout])
-
-
-from datetime import datetime
-
-
-@cli.command()
-def generar_content():
-    """
-    {'link': 'http://boletinoficial.cba.gov.ar/wp-content/4p96humuzp/2012/03/120312_citacionesanexo.pdf',
-     'file_urls': ['http://boletinoficial.cba.gov.ar/wp-content/4p96humuzp/2012/03/120312_citacionesanexo.pdf'],
-     'fecha': 'Viernes, 30 de marzo de 2012',
-     'files': [],
-     'titulo': '2º Sección: Judiciales - Anexo Citaciones',
-     'date': '2012-03-30'}
-    """
-    boletines = open('boescraper/boletines.jl')
-
-    for i, line in enumerate(boletines):
-        boletin = json.loads(line)
-
-        date_str = boletin['date']
-        date = datetime.strptime(date_str, '%Y-%m-%d')
-        year = date.strftime('%Y')
-        month = date.strftime('%m')
-        day = date.strftime('%d')
-        slug = slugify(boletin['titulo'])
-
-        seccion_dir = os.path.join(CONTENT_BASE, year, month, day, slug)
-        os.makedirs(seccion_dir, exist_ok=True)
-
-        render_content(os.path.join(CONTENT_BASE, year), [("year", str(year))])
-        render_content(os.path.join(CONTENT_BASE, year, month), [
-            ("year", str(year)),
-            ("month", str(month)),
-        ])
-        render_content(os.path.join(CONTENT_BASE, year, month, day), [
-            ("year", str(year)),
-            ("month", str(month)),
-            ("day", str(day)),
-        ])
-        render_boletin(seccion_dir, boletin)
 
 
 @cli.command()
@@ -297,22 +213,6 @@ def generar_content_de_pdfs():
         subprocess.call(["pdftotext", "-raw", source_pdf, destination_txt])
 
 
-from boescraper.database.connection import Base, engine, db
-from boescraper.database.models import SeccionBoletin
-
-
-@cli.command()
-def init_db():
-    Base.metadata.bind = engine
-    Base.metadata.create_all()
-
-
-@cli.command()
-def drop_db():
-    Base.metadata.bind = engine
-    Base.metadata.drop_all()
-
-
 @cli.command()
 def update_text():
     for i, seccion in enumerate(db.query(SeccionBoletin)):
@@ -322,17 +222,6 @@ def update_text():
             db.commit()
         seccion.content = pdf2text(file_path)
     db.commit()
-
-
-@cli.command()
-def render_site():
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
-    env = Environment(
-        loader=FileSystemLoader('./boe/templates'),
-        autoescape=select_autoescape(['html', 'xml'])
-    )
-    layout = env.get_template('layout.html')
-    print(layout.render())
 
 
 if __name__ == "__main__":
