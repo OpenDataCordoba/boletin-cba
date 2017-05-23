@@ -20,6 +20,8 @@ Flask-Migrate==2.0.3
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.2
 Frozen-Flask==0.14
+gunicorn==19.7.1
+honcho==1.0.1
 httpie==0.9.9
 idna==2.5
 incremental==16.10.1
