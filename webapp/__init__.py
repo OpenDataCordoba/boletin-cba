@@ -3,11 +3,14 @@ import datetime
 import sqlalchemy as sa
 from flask import Flask, render_template, abort, Markup
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from sqlalchemy import Column, String, Integer, Date, Text
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///boletin'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 markdown = mistune.Markdown()
 
 
