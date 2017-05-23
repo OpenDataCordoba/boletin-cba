@@ -1,3 +1,4 @@
+import os
 import mistune
 import datetime
 import sqlalchemy as sa
@@ -7,7 +8,7 @@ from flask_migrate import Migrate
 from sqlalchemy import Column, String, Integer, Date, Text
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///boletin'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql:///boletin')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
