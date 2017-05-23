@@ -37,3 +37,10 @@ Con las credenciales de aws en algún lugar accesible a boto3, correr:
 ```
 $ s3-deploy-website
 ```
+
+## Heroku
+
+```
+$ heroku apps:create boletin-cba
+$ heroku addons:create heroku-postgresql:hobby-dev -a boletin-cba
+```
