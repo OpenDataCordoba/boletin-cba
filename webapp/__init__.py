@@ -33,20 +33,29 @@ def query_date_part(part):
 
 @app.route("/")
 def home():
-    years = query_date_part('year')
-    return render_template('home.html', years=years)
+    query = db.session.query(sa.distinct(sa.cast(sa.func.extract('year', SeccionBoletin.date), sa.Integer)).label('year'))
+    query = query.order_by('year')
+    return render_template('home.html', years=query)
 
 
 @app.route("/<int:year>/")
 def year(year):
-    months = query_date_part('month')
-    return render_template('year.html', year=year, months=months)
+    distinct_month = sa.distinct(sa.cast(sa.func.extract('month', SeccionBoletin.date), sa.Integer)).label('month')
+    query = db.session.query(distinct_month)
+    query = query.filter(sa.func.extract('year', SeccionBoletin.date) == year)
+    query = query.order_by('month')
+
+    return render_template('year.html', year=year, months=query)
 
 
 @app.route("/<int:year>/<int:month>/")
 def month(year, month):
-    days = query_date_part('day')
-    return render_template('month.html', year=year, month=month, days=days)
+    distinct_day = sa.distinct(sa.cast(sa.func.extract('day', SeccionBoletin.date), sa.Integer)).label('day')
+    query = db.session.query(distinct_day)
+    query = query.filter(sa.func.extract('year', SeccionBoletin.date) == year)
+    query = query.filter(sa.func.extract('month', SeccionBoletin.date) == month)
+    query = query.order_by('day')
+    return render_template('month.html', year=year, month=month, days=query)
 
 
 @app.route("/<int:year>/<int:month>/<int:day>/")
@@ -65,7 +74,8 @@ def seccion(year, month, day, slug):
     ).first()
     if not seccion:
         abort(404)
-    content = Markup(markdown(seccion.content))
+    # content = Markup(markdown(seccion.content))
+    content = seccion.content
     return render_template('seccion.html', year=year, month=month, day=day, seccion=seccion, content=content)
 
 
