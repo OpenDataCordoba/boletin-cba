@@ -29,10 +29,9 @@ class SeccionBoletin(db.Model):
         return "<SeccionBoletin: titulo='%s', date='%s'>" % (self.titulo, self.date)
 
 
-def query_date_part(part):
-    query = db.session.query(sa.distinct(sa.cast(sa.func.extract(part, SeccionBoletin.date), sa.Integer)).label(part))
-    query = query.order_by(part)
-    return query
+@app.route("/about/")
+def about():
+    return render_template('about.html')
 
 
 @app.route("/")

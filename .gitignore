@@ -1,5 +1,5 @@
 webapp/build/
-boe/content/
+build/
 tmp/
 boescraper/boletines.jl
 __pycache__/
